@@ -1,0 +1,15 @@
+{
+  "name": "google-chat-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.ts",
+    "login": "node server.ts login"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.4.0",
+    "playwright": "^1.64.1",
+    "zod": "^4.6.7"
+  }
+}
