@@ -57,11 +57,13 @@ Run with `GCHAT_HEADED=1`, open DevTools in that window, and find the new attrib
 
 Releases are published to npm by `.github/workflows/publish.yml` when a `v*` tag is pushed. It uses npm trusted publishing, so there is no npm token in the repository.
 
-One-time setup:
+One-time setup (already done for this repository):
 
-1. On npmjs.com, open the `gchat-mcp` package's **Settings → Trusted publishing**, and add GitHub Actions with organization or user `sldone`, repository `gchat-mcp`, workflow `publish.yml`, and environment `npm`.
-2. In the GitHub repository's **Settings → Environments**, create an environment named `npm`. Add required reviewers if you want to approve each release.
-3. If npm doesn't let you add a trusted publisher before the package exists, publish the first version by hand with `npm publish --access public`, then do step 1.
+1. Version 0.1.0 was published by hand, because npm only accepts a trusted publisher for a package that already exists.
+2. The trusted publisher was added with `npm trust github gchat-mcp --file publish.yml --repo sldone/gchat-mcp --env npm --allow-publish`.
+3. The GitHub environment `npm` exists. Add required reviewers to it under **Settings → Environments** if you want to approve each release.
+
+The workflow skips versions that are already on npm, so re-running it, or pushing a tag for a version that was published by hand, is safe.
 
 For each release:
 
