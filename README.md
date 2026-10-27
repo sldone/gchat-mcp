@@ -8,7 +8,7 @@ It doesn't use the Google Chat API or OAuth. It drives the Chat web app (chat.go
 
 ## Setup
 
-Requires Node.js 22.18 or later (it runs `server.ts` directly) and Google Chrome.
+Requires Node.js 22.18 or later (run `npm run build` after `npm install`) and Google Chrome.
 
 ```sh
 npm install
@@ -25,7 +25,7 @@ claude plugin marketplace add /absolute/path/to/google-chat-mcp
 claude plugin install google-chat@google-chat-mcp
 ```
 
-To try it without installing, start Claude Code with `claude --plugin-dir /absolute/path/to/google-chat-mcp`. To register only the MCP server, run `claude mcp add google-chat -- node /absolute/path/to/google-chat-mcp/server.ts`.
+To try it without installing, start Claude Code with `claude --plugin-dir /absolute/path/to/google-chat-mcp`. To register only the MCP server, run `claude mcp add google-chat -- node /absolute/path/to/google-chat-mcp/dist/server.js`.
 
 ### Codex
 
@@ -38,7 +38,7 @@ Codex reads `.codex-plugin/plugin.json`, which allows tool calls up to 10 minute
 
 ### Other MCP clients
 
-Run `node /absolute/path/to/google-chat-mcp/server.ts` as a stdio server.
+Run `node /absolute/path/to/google-chat-mcp/dist/server.js` as a stdio server.
 
 The server runs Chrome headless. To watch what it does, set `GCHAT_HEADED=1` in the server's environment.
 
