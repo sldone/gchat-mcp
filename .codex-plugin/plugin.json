@@ -6,7 +6,7 @@
   "mcpServers": {
     "google-chat": {
       "command": "node",
-      "args": ["server.ts"],
+      "args": ["dist/server.js"],
       "cwd": ".",
       "tool_timeout_sec": 600
     }
