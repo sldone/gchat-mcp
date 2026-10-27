@@ -1,5 +1,6 @@
 // Google Chat MCP server that drives the Chat web UI in a local Chrome profile.
 // No Google API or OAuth client: it reuses your own browser session, so admin OAuth blocks don't apply.
+import { chmodSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { McpServer } from '@modelcontextprotocol/server';
@@ -7,8 +8,11 @@ import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import { chromium, type Page } from 'playwright';
 import * as z from 'zod/v4';
 
-// Outside the code directory, so plugin reinstalls and updates keep the session.
+// The Google session lives only in this Chrome profile on the user's machine. The server itself never reads,
+// copies or sends its cookies. It sits outside the code directory, so plugin reinstalls and updates keep it.
 const PROFILE = process.env.GCHAT_PROFILE ?? join(homedir(), '.google-chat-mcp', 'profile');
+mkdirSync(PROFILE, { recursive: true, mode: 0o700 });
+chmodSync(PROFILE, 0o700); // also tightens a folder that already existed with looser permissions
 const BASE = 'https://chat.google.com';
 // Selectors come from the Chat web UI and break when Google changes it. Re-probe the DOM if reads come back empty.
 const COMPOSER = '[role=textbox][contenteditable=true]';
@@ -22,7 +26,9 @@ const launch = (headless: boolean) =>
     channel: 'chrome',
     headless,
     viewport: null,
-    ignoreDefaultArgs: ['--enable-automation'],
+    // Playwright's defaults make Chrome encrypt cookies with a fixed, well-known key. Dropping
+    // --use-mock-keychain and --password-store=basic lets Chrome protect them with the OS keychain instead.
+    ignoreDefaultArgs: ['--enable-automation', '--use-mock-keychain', '--password-store=basic'],
   });
 
 // Opens a visible Chrome window and waits until Google Chat has loaded for a signed-in user.
@@ -37,13 +43,28 @@ async function signIn() {
   }
 }
 
+// Deletes the stored session. Refuses to touch a folder that GCHAT_PROFILE points at by mistake.
+function signOut() {
+  const entries = readdirSync(PROFILE);
+  if (entries.length && !entries.includes('Local State')) {
+    throw new Error(`${PROFILE} is not a Chrome profile, so it was left untouched.`);
+  }
+  for (const entry of entries) rmSync(join(PROFILE, entry), { recursive: true, force: true });
+}
+
 if (process.argv[2] === 'login') {
   console.error('Sign in to Google in the Chrome window. It closes by itself once Google Chat loads.');
   await signIn();
   process.exit(0);
 }
+if (process.argv[2] === 'logout') {
+  signOut();
+  console.error(`Deleted the Google session stored in ${PROFILE}.`);
+  process.exit(0);
+}
 
 let browserPage: Promise<Page> | undefined;
+const closeBrowser = () => browserPage?.then((page) => page.context().close(), () => {});
 
 async function openBrowser() {
   const ctx = await launch(process.env.GCHAT_HEADED !== '1');
@@ -58,6 +79,12 @@ function serial<T>(fn: () => Promise<T>): Promise<T> {
   queue = run.catch(() => {});
   return run;
 }
+
+// Ids end up in chat.google.com URLs and in CSS selectors, so only the characters Chat uses get through.
+const SpaceId = z
+  .string()
+  .regex(/^(?:(?:space|dm)\/)?[\w-]+$/, 'Expected a conversation id like "space/AAAAwsXxIMY" or "dm/-qXUj4AAAAE".');
+const ThreadId = z.string().regex(/^[\w-]+$/, 'Expected a thread id like "NIGRVKEYuRc".');
 
 // Accepts ids from list_spaces ("space/AAAA…", "dm/xyz…") or bare ids.
 const bareId = (space: string) => space.replace(/^(space|dm)\//, '');
@@ -186,7 +213,7 @@ server.registerTool(
     title: 'Read Google Chat messages',
     description: `Read the most recent top-level messages of a space or DM, oldest first. ${MESSAGE_FIELDS} Messages that start a thread also have replies (e.g. "3 replies, Last Reply 9:09 AM"); read those with read_thread. Larger limits scroll back through history and take longer.`,
     inputSchema: z.object({
-      space: z.string().describe('Conversation id from list_spaces or search, e.g. "space/AAAAwsXxIMY" or "dm/-qXUj4AAAAE"'),
+      space: SpaceId.describe('Conversation id from list_spaces or search, e.g. "space/AAAAwsXxIMY" or "dm/-qXUj4AAAAE"'),
       limit: z.number().int().min(1).max(500).default(50).describe('How many of the latest messages to return'),
     }),
     annotations: READ_ONLY,
@@ -205,8 +232,8 @@ server.registerTool(
     title: 'Read a Google Chat thread',
     description: `Read every message in one thread, starting with the message that opened it. ${MESSAGE_FIELDS}`,
     inputSchema: z.object({
-      space: z.string().describe('Conversation id the thread belongs to'),
-      thread: z.string().describe('The "thread" field of a message from read_messages or search'),
+      space: SpaceId.describe('Conversation id the thread belongs to'),
+      thread: ThreadId.describe('The "thread" field of a message from read_messages or search'),
     }),
     annotations: READ_ONLY,
   },
@@ -246,9 +273,9 @@ server.registerTool(
     description:
       'Send a message as the user, either as a new message in a space or DM or as a reply in a thread. It is posted immediately and other people see it, so confirm the text and conversation with the user first.',
     inputSchema: z.object({
-      space: z.string().describe('Conversation id from list_spaces or search'),
+      space: SpaceId.describe('Conversation id from list_spaces or search'),
       text: z.string().min(1).describe('Message text. Line breaks are kept.'),
-      thread: z.string().optional().describe('Thread id to reply in. Omit to post a new top-level message.'),
+      thread: ThreadId.optional().describe('Thread id to reply in. Omit to post a new top-level message.'),
     }),
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   },
@@ -286,9 +313,25 @@ server.registerTool(
   () =>
     serial(async () => {
       // The headless browser holds the profile lock, so close it before opening the visible one.
-      await browserPage?.then((page) => page.context().close(), () => {});
+      await closeBrowser();
       await signIn();
       return json({ signedIn: true });
+    }),
+);
+
+server.registerTool(
+  'sign_out',
+  {
+    title: 'Sign out of Google Chat',
+    description:
+      "Delete the Google session stored on this computer (the server's Chrome profile). Nothing on this computer can act as the user until sign_in is called again. To also end the session on Google's side, the user can remove it in their Google Account's security settings.",
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  },
+  () =>
+    serial(async () => {
+      await closeBrowser();
+      signOut();
+      return json({ signedOut: true });
     }),
 );
 

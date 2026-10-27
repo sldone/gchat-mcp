@@ -9,7 +9,7 @@ after(() => server?.close());
 test('every tool tells an agent what it does, what it takes and whether it changes anything', async () => {
   const { tools } = await server.request('tools/list');
   assert.deepEqual(tools.map((t: any) => t.name).sort(), [
-    'list_spaces', 'read_messages', 'read_thread', 'search', 'send_message', 'sign_in',
+    'list_spaces', 'read_messages', 'read_thread', 'search', 'send_message', 'sign_in', 'sign_out',
   ]);
   for (const tool of tools) {
     assert.ok(tool.title, `${tool.name} has a title`);

@@ -6,6 +6,8 @@ export type Server = {
   instructions: string;
   request(method: string, params?: unknown): Promise<any>;
   callTool(name: string, args?: Record<string, unknown>): Promise<any>;
+  /** Calls a tool that is expected to fail and returns the error text, whichever way the server reports it. */
+  toolError(name: string, args?: Record<string, unknown>): Promise<string>;
   close(): Promise<void>;
 };
 
@@ -38,6 +40,11 @@ export async function startServer(env: Record<string, string> = {}): Promise<Ser
     instructions: init.instructions ?? '',
     request,
     callTool: (name, args = {}) => request('tools/call', { name, arguments: args }),
+    async toolError(name, args = {}) {
+      const result = await request('tools/call', { name, arguments: args }).catch((e: Error) => ({ isError: true, content: [{ text: e.message }] }));
+      if (!result.isError) throw new Error(`${name} succeeded but was expected to fail: ${JSON.stringify(result)}`);
+      return result.content[0].text;
+    },
     async close() {
       child.kill();
       await exited;
