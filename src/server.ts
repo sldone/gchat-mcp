@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // Google Chat MCP server that drives the Chat web UI in a local Chrome profile.
 // No Google API or OAuth client: it reuses your own browser session, so admin OAuth blocks don't apply.
 import { chmodSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
@@ -10,7 +11,7 @@ import * as z from 'zod/v4';
 
 // The Google session lives only in this Chrome profile on the user's machine. The server itself never reads,
 // copies or sends its cookies. It sits outside the code directory, so plugin reinstalls and updates keep it.
-const PROFILE = process.env.GCHAT_PROFILE ?? join(homedir(), '.google-chat-mcp', 'profile');
+const PROFILE = process.env.GCHAT_PROFILE ?? join(homedir(), '.gchat-mcp', 'profile');
 mkdirSync(PROFILE, { recursive: true, mode: 0o700 });
 chmodSync(PROFILE, 0o700); // also tightens a folder that already existed with looser permissions
 const BASE = 'https://chat.google.com';

@@ -1,9 +1,7 @@
 {
-  "name": "google-chat-mcp",
-  "owner": {
-    "name": "Vladislav Nikonorov"
-  },
-  "description": "Local Google Chat MCP server packaged as a plugin.",
+  "name": "gchat-mcp",
+  "owner": { "name": "Vladislav Nikonorov" },
+  "description": "Google Chat MCP server, packaged as a plugin.",
   "plugins": [
     {
       "name": "google-chat",

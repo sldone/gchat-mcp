@@ -5,9 +5,8 @@
   "keywords": ["google-chat", "mcp", "chat"],
   "mcpServers": {
     "google-chat": {
-      "command": "node",
-      "args": ["dist/server.js"],
-      "cwd": ".",
+      "command": "npx",
+      "args": ["-y", "gchat-mcp"],
       "tool_timeout_sec": 600
     }
   }

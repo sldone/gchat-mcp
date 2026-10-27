@@ -3,11 +3,14 @@
   "version": "0.1.0",
   "description": "Read, search and send Google Chat messages through your own signed-in Chrome session. Works without Google API or OAuth access.",
   "author": { "name": "Vladislav Nikonorov" },
+  "homepage": "https://github.com/sldone/gchat-mcp",
+  "repository": "https://github.com/sldone/gchat-mcp",
+  "license": "MIT",
   "keywords": ["google-chat", "mcp", "chat"],
   "mcpServers": {
     "google-chat": {
-      "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/dist/server.js"]
+      "command": "npx",
+      "args": ["-y", "gchat-mcp"]
     }
   }
 }
