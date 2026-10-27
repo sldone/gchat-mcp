@@ -1,6 +1,6 @@
 {
   "name": "google-chat",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Read, search and send Google Chat messages through your own signed-in Chrome session. Works without Google API or OAuth access.",
   "keywords": ["google-chat", "mcp", "chat"],
   "mcpServers": {

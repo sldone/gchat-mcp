@@ -1,6 +1,6 @@
 {
   "name": "gchat-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server for reading, searching and sending Google Chat messages through your own signed-in browser session. No Google API or OAuth app needed.",
   "keywords": [
     "mcp",
