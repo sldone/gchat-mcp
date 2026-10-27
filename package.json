@@ -1,15 +1,45 @@
 {
-  "name": "google-chat-mcp",
+  "name": "gchat-mcp",
   "version": "0.1.0",
-  "private": true,
+  "description": "MCP server for reading, searching and sending Google Chat messages through your own signed-in browser session. No Google API or OAuth app needed.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "google-chat",
+    "claude",
+    "codex",
+    "playwright"
+  ],
+  "homepage": "https://github.com/sldone/gchat-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/sldone/gchat-mcp/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sldone/gchat-mcp.git"
+  },
+  "license": "MIT",
+  "author": "Vladislav Nikonorov",
   "type": "module",
+  "bin": {
+    "gchat-mcp": "dist/server.js"
+  },
+  "files": [
+    "dist",
+    "SECURITY.md",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc -p tsconfig.test.json",
     "test": "npm run build && node --test --test-timeout=60000 \"test/*.test.ts\"",
     "start": "node dist/server.js",
     "login": "node dist/server.js login",
-    "logout": "node dist/server.js logout"
+    "logout": "node dist/server.js logout",
+    "prepack": "npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.4.0",
