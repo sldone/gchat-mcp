@@ -6,9 +6,10 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc -p tsconfig.test.json",
-    "test": "npm run build && node --test \"test/*.test.ts\"",
+    "test": "npm run build && node --test --test-timeout=60000 \"test/*.test.ts\"",
     "start": "node dist/server.js",
-    "login": "node dist/server.js login"
+    "login": "node dist/server.js login",
+    "logout": "node dist/server.js logout"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.4.0",
